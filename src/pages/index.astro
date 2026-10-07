@@ -1,0 +1,36 @@
+---
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Create and print US passport photos privately in your browser." />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>Passport Photo Maker</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header>
+        <p class="eyebrow">2 × 2 INCH PHOTO</p>
+        <h1>Passport photo maker</h1>
+        <p class="intro">Position one photo, then download a print-ready 4×6 sheet.</p>
+      </header>
+
+      <section class="card" aria-labelledby="choose-heading">
+        <div class="step-heading">
+          <span aria-hidden="true">1</span>
+          <div>
+            <h2 id="choose-heading">Choose your photo</h2>
+            <p>Your photo stays on your device.</p>
+          </div>
+        </div>
+        <label class="upload-button" for="photo-input">Choose or take a photo</label>
+        <input id="photo-input" type="file" accept="image/*" capture="environment" />
+        <p class="hint">Use a clear, recent photo with even lighting and a plain background.</p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "passport-photo-maker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "astro": "^5.14.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "typescript": "^5.9.3"
+  }
+}
