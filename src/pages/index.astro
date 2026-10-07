@@ -31,6 +31,67 @@ import '../styles/global.css';
         <input id="photo-input" type="file" accept="image/*" capture="environment" />
         <p class="hint">Use a clear, recent photo with even lighting and a plain background.</p>
       </section>
+
+      <section class="card editor-card" id="editor-section" aria-labelledby="position-heading" hidden>
+        <div class="step-heading">
+          <span aria-hidden="true">2</span>
+          <div>
+            <h2 id="position-heading">Position your photo</h2>
+            <p>Drag to move. Use the slider to zoom.</p>
+          </div>
+        </div>
+
+        <div class="editor-layout">
+          <div>
+            <div class="crop-frame" id="crop-frame" aria-label="Photo positioning area">
+              <img id="editor-image" alt="Photo being positioned" draggable="false" />
+              <div class="passport-guide" aria-hidden="true">
+                <div class="head-oval"></div>
+                <div class="eye-line"><span>EYES</span></div>
+              </div>
+            </div>
+            <label class="zoom-control" for="zoom-input">
+              <span>Zoom</span>
+              <input id="zoom-input" type="range" min="1" max="3" step="0.01" value="1" />
+            </label>
+          </div>
+
+          <div class="preview-panel">
+            <h3>2×2 preview</h3>
+            <canvas id="crop-preview" width="300" height="300" aria-label="Passport photo crop preview"></canvas>
+            <p>The guide is for positioning only and won’t appear in your download.</p>
+          </div>
+        </div>
+      </section>
+      <p class="error-message" id="error-message" role="alert" hidden></p>
     </main>
+    <script>
+      import { PhotoEditor } from '../lib/photo-editor';
+
+      const input = document.querySelector<HTMLInputElement>('#photo-input')!;
+      const section = document.querySelector<HTMLElement>('#editor-section')!;
+      const error = document.querySelector<HTMLElement>('#error-message')!;
+      const editor = new PhotoEditor(
+        document.querySelector<HTMLElement>('#crop-frame')!,
+        document.querySelector<HTMLImageElement>('#editor-image')!,
+        document.querySelector<HTMLInputElement>('#zoom-input')!,
+        document.querySelector<HTMLCanvasElement>('#crop-preview')!,
+      );
+
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        error.hidden = true;
+        section.hidden = false;
+        try {
+          await editor.load(file);
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (cause) {
+          section.hidden = true;
+          error.textContent = cause instanceof Error ? cause.message : 'That image could not be opened.';
+          error.hidden = false;
+        }
+      });
+    </script>
   </body>
 </html>

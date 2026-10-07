@@ -55,8 +55,32 @@ h2 { margin: .1rem 0 .25rem; font-size: 1.15rem; }
 .upload-button:hover { background: #ffb51c; }
 .upload-button:focus-within, #photo-input:focus + * { outline: 3px solid #75b8e3; outline-offset: 3px; }
 .hint { margin-top: .8rem; font-size: .875rem; }
+.editor-card { margin-top: 1rem; }
+.editor-layout { display: grid; gap: 1.5rem; }
+.crop-frame {
+  position: relative; width: 100%; aspect-ratio: 1; overflow: hidden;
+  border-radius: .5rem; background: #cbd5dc; cursor: grab; touch-action: none;
+  user-select: none;
+}
+.crop-frame:active { cursor: grabbing; }
+.crop-frame > img { position: absolute; top: 50%; left: 50%; max-width: none; pointer-events: none; }
+.passport-guide { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.9); }
+.head-oval {
+  position: absolute; left: 50%; top: 10%; width: 48%; height: 76%; transform: translateX(-50%);
+  border: 2px dashed rgba(255,255,255,.95); border-radius: 50%; filter: drop-shadow(0 1px 1px rgba(0,0,0,.5));
+}
+.eye-line { position: absolute; top: 43%; left: 8%; right: 8%; border-top: 1px solid rgba(255,255,255,.95); text-align: right; }
+.eye-line span { position: relative; top: -.65rem; padding-left: .3rem; color: white; font-size: .625rem; font-weight: 800; text-shadow: 0 1px 2px #000; }
+.zoom-control { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 1rem; margin-top: 1rem; font-weight: 750; }
+.zoom-control input { width: 100%; accent-color: #173f5f; }
+.preview-panel h3 { margin: 0 0 .6rem; font-size: .95rem; }
+.preview-panel canvas { display: block; width: min(100%, 12rem); height: auto; border: 1px solid #d7e0e7; border-radius: .4rem; }
+.preview-panel p { max-width: 18rem; margin: .65rem 0 0; color: #5c6873; font-size: .82rem; line-height: 1.4; }
+.error-message { padding: 1rem; border-radius: .65rem; background: #fff0ee; color: #9a2e22; font-weight: 700; }
+[hidden] { display: none !important; }
 
 @media (min-width: 640px) {
   .app-shell { padding-top: 3.5rem; }
   .card { padding: 1.75rem; }
+  .editor-layout { grid-template-columns: minmax(0, 1fr) 12rem; align-items: start; }
 }
