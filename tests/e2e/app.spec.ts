@@ -110,14 +110,17 @@ test('reveals step 3 and downloads every image format', async ({ page }) => {
   expect(landscapeSamples.firstPhoto[2]).toBeGreaterThan(landscapeSamples.firstPhoto[0]);
   expect(landscapeSamples.secondPhoto[2]).toBeGreaterThan(landscapeSamples.secondPhoto[0]);
 
-  await expectDownload(page, 'Single photo', 'passport-photo-600x600.jpg', { width: 600, height: 600 });
-  await expectDownload(page, '4×6 portrait sheet', 'passport-photos-4x6-portrait.jpg', { width: 1200, height: 1800 });
-  await expectDownload(page, '4×6 landscape sheet', 'passport-photos-4x6-landscape.jpg', { width: 1800, height: 1200 });
+  await expect(page.locator('[data-format="single"]')).toContainText('Single photo600×600');
+  await expect(page.locator('[data-format="six"]')).toContainText('4×6 print1200×1800');
+  await expect(page.locator('[data-format="two"]')).toContainText('4×6 print with margin1800×1200 · wide center gap');
+  await expectDownload(page, 'single', 'passport-photo-600x600.jpg', { width: 600, height: 600 });
+  await expectDownload(page, 'six', 'passport-photos-4x6-portrait.jpg', { width: 1200, height: 1800 });
+  await expectDownload(page, 'two', 'passport-photos-4x6-landscape.jpg', { width: 1800, height: 1200 });
 });
 
-async function expectDownload(page: import('@playwright/test').Page, buttonName: string, filename: string, dimensions: { width: number; height: number }) {
+async function expectDownload(page: import('@playwright/test').Page, format: string, filename: string, dimensions: { width: number; height: number }) {
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: new RegExp(buttonName) }).click();
+  await page.locator(`[data-format="${format}"]`).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe(filename);
   const stream = await download.createReadStream();

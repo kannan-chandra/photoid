@@ -16,7 +16,7 @@ import '../styles/global.css';
       <header>
         <p class="eyebrow">2 × 2 INCH PHOTO</p>
         <h1>Passport photo maker</h1>
-        <p class="intro">Position one photo, then download a print-ready 4×6 sheet.</p>
+        <p class="intro">Upload a photo and generate compliant print-ready 2x2 images</p>
       </header>
 
       <section class="card" aria-labelledby="choose-heading">
@@ -32,7 +32,7 @@ import '../styles/global.css';
           <label class="upload-button" for="photo-input">Choose or take a photo</label>
           <input id="photo-input" type="file" accept="image/*,.heic,.heif" capture="environment" />
         </div>
-        <p class="hint">JPEG, PNG, WebP, HEIC, or HEIF. Use a clear, recent photo with even lighting and a plain background.</p>
+        <p class="hint">Use a clear, recent photo with even lighting and a plain background.</p>
       </section>
 
       <section class="card editor-card" id="editor-section" aria-labelledby="position-heading" hidden>
@@ -81,15 +81,15 @@ import '../styles/global.css';
         <div class="format-grid">
           <button class="format-option" type="button" data-format="single">
             <span class="format-preview single-preview"><img data-preview="single" alt="Generated single passport photo preview" /></span>
-            <span><strong>Single photo</strong><small>600×600 · one 2×2 photo</small></span>
+            <span><strong>Single photo</strong><small>600×600</small></span>
           </button>
           <button class="format-option" type="button" data-format="six">
             <span class="format-preview portrait-preview"><img data-preview="six" alt="Generated portrait six-photo sheet preview" /></span>
-            <span><strong>4×6 portrait sheet</strong><small>1200×1800 · six photos</small></span>
+            <span><strong>4×6 print</strong><small>1200×1800</small></span>
           </button>
           <button class="format-option" type="button" data-format="two">
             <span class="format-preview landscape-preview"><img data-preview="two" alt="Generated landscape two-photo sheet preview" /></span>
-            <span><strong>4×6 landscape sheet</strong><small>1800×1200 · two photos · wide center gap</small></span>
+            <span><strong>4×6 print with margin</strong><small>1800×1200 · wide center gap</small></span>
           </button>
         </div>
         <p class="print-note"><strong>When printing sheets:</strong> choose 4×6 paper and “Fit” or “Full image.” Turn off cropping or “Fill.”</p>
