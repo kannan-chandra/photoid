@@ -62,15 +62,29 @@ import '../styles/global.css';
             <p>The guide is for positioning only and won’t appear in your download.</p>
           </div>
         </div>
+
+        <div class="export-panel">
+          <div class="sheet-icon" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div>
+            <h3>4×6 print sheet</h3>
+            <p>Six exact 2×2 photos at 300 DPI, with cut guides.</p>
+          </div>
+          <button class="download-button" id="download-button" type="button">Download 4×6 JPEG</button>
+        </div>
+        <p class="print-note"><strong>When printing:</strong> choose 4×6 paper and “Fit” or “Full image.” Turn off cropping or “Fill.”</p>
       </section>
       <p class="error-message" id="error-message" role="alert" hidden></p>
     </main>
     <script>
       import { PhotoEditor } from '../lib/photo-editor';
+      import { downloadBlob, renderPassportSheet } from '../lib/sheet-renderer';
 
       const input = document.querySelector<HTMLInputElement>('#photo-input')!;
       const section = document.querySelector<HTMLElement>('#editor-section')!;
       const error = document.querySelector<HTMLElement>('#error-message')!;
+      const downloadButton = document.querySelector<HTMLButtonElement>('#download-button')!;
       const editor = new PhotoEditor(
         document.querySelector<HTMLElement>('#crop-frame')!,
         document.querySelector<HTMLImageElement>('#editor-image')!,
@@ -90,6 +104,22 @@ import '../styles/global.css';
           section.hidden = true;
           error.textContent = cause instanceof Error ? cause.message : 'That image could not be opened.';
           error.hidden = false;
+        }
+      });
+
+      downloadButton.addEventListener('click', async () => {
+        downloadButton.disabled = true;
+        downloadButton.textContent = 'Creating JPEG…';
+        error.hidden = true;
+        try {
+          const blob = await renderPassportSheet(editor.getSnapshot());
+          downloadBlob(blob, 'passport-photos-4x6.jpg');
+        } catch (cause) {
+          error.textContent = cause instanceof Error ? cause.message : 'The print sheet could not be created.';
+          error.hidden = false;
+        } finally {
+          downloadButton.disabled = false;
+          downloadButton.textContent = 'Download 4×6 JPEG';
         }
       });
     </script>

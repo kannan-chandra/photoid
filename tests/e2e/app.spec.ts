@@ -41,3 +41,36 @@ test('loads, repositions, zooms, and previews a local photo', async ({ page }) =
   });
   expect(previewHasPixels).toBe(true);
 });
+
+test('downloads a 1200 by 1800 JPEG print sheet', async ({ page }) => {
+  await page.goto('/');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="1200" height="900" fill="#247ba0"/><circle cx="600" cy="400" r="220" fill="#ffe0bd"/></svg>`;
+  await page.locator('#photo-input').setInputFiles({ name: 'portrait.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) });
+  await expect(page.locator('#download-button')).toBeEnabled();
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#download-button').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('passport-photos-4x6.jpg');
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const jpeg = Buffer.concat(chunks);
+  expect(jpeg.subarray(0, 2)).toEqual(Buffer.from([0xff, 0xd8]));
+  expect(readJpegDimensions(jpeg)).toEqual({ width: 1200, height: 1800 });
+  expect(jpeg.length).toBeGreaterThan(20_000);
+});
+
+function readJpegDimensions(buffer: Buffer): { width: number; height: number } {
+  let offset = 2;
+  while (offset < buffer.length) {
+    if (buffer[offset] !== 0xff) { offset += 1; continue; }
+    const marker = buffer[offset + 1];
+    const length = buffer.readUInt16BE(offset + 2);
+    if (marker >= 0xc0 && marker <= 0xc3) {
+      return { height: buffer.readUInt16BE(offset + 5), width: buffer.readUInt16BE(offset + 7) };
+    }
+    offset += 2 + length;
+  }
+  throw new Error('JPEG dimensions were not found');
+}

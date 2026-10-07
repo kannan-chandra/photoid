@@ -77,10 +77,30 @@ h2 { margin: .1rem 0 .25rem; font-size: 1.15rem; }
 .preview-panel canvas { display: block; width: min(100%, 12rem); height: auto; border: 1px solid #d7e0e7; border-radius: .4rem; }
 .preview-panel p { max-width: 18rem; margin: .65rem 0 0; color: #5c6873; font-size: .82rem; line-height: 1.4; }
 .error-message { padding: 1rem; border-radius: .65rem; background: #fff0ee; color: #9a2e22; font-weight: 700; }
+.export-panel {
+  display: grid; grid-template-columns: 3rem 1fr; gap: .85rem; align-items: center;
+  margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #d7e0e7;
+}
+.export-panel h3 { margin: 0 0 .2rem; font-size: 1rem; }
+.export-panel p { margin: 0; color: #5c6873; font-size: .85rem; line-height: 1.4; }
+.sheet-icon {
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr);
+  width: 2.5rem; height: 3.75rem; border: 1px solid #173f5f; background: white;
+}
+.sheet-icon i { border: .5px solid #9aaab7; background: #dce8ef; }
+.download-button {
+  grid-column: 1 / -1; min-height: 3.25rem; border: 0; border-radius: .65rem;
+  background: #173f5f; color: white; font-weight: 800; cursor: pointer;
+}
+.download-button:hover { background: #20577f; }
+.download-button:disabled { cursor: wait; opacity: .7; }
+.print-note { margin: .9rem 0 0; color: #46535e; font-size: .82rem; line-height: 1.45; }
 [hidden] { display: none !important; }
 
 @media (min-width: 640px) {
   .app-shell { padding-top: 3.5rem; }
   .card { padding: 1.75rem; }
   .editor-layout { grid-template-columns: minmax(0, 1fr) 12rem; align-items: start; }
+  .export-panel { grid-template-columns: 3rem 1fr auto; }
+  .download-button { grid-column: auto; padding-inline: 1.25rem; }
 }
