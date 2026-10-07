@@ -66,29 +66,46 @@ import '../styles/global.css';
           </div>
         </div>
 
-        <div class="export-panel">
-          <div class="sheet-icon" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i><i></i>
-          </div>
+        <button class="primary-button generate-button" id="generate-button" type="button">Generate images</button>
+      </section>
+
+      <section class="card download-card" id="download-section" aria-labelledby="download-heading" hidden>
+        <div class="step-heading">
+          <span aria-hidden="true">3</span>
           <div>
-            <h3>4×6 print sheet</h3>
-            <p>Six exact 2×2 photos at 300 DPI, with cut guides.</p>
+            <h2 id="download-heading">Download your images</h2>
+            <p>Choose the format you need.</p>
           </div>
-          <button class="download-button" id="download-button" type="button">Download 4×6 JPEG</button>
         </div>
-        <p class="print-note"><strong>When printing:</strong> choose 4×6 paper and “Fit” or “Full image.” Turn off cropping or “Fill.”</p>
+
+        <div class="format-grid">
+          <button class="format-option" type="button" data-format="single">
+            <span class="format-preview single-preview" aria-hidden="true"><i></i></span>
+            <span><strong>Single photo</strong><small>600×600 · one 2×2 photo</small></span>
+          </button>
+          <button class="format-option" type="button" data-format="six">
+            <span class="format-preview portrait-preview" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            <span><strong>4×6 portrait sheet</strong><small>1200×1800 · six photos</small></span>
+          </button>
+          <button class="format-option" type="button" data-format="two">
+            <span class="format-preview landscape-preview" aria-hidden="true"><i></i><i></i></span>
+            <span><strong>4×6 landscape sheet</strong><small>1800×1200 · two photos · 1-inch margins</small></span>
+          </button>
+        </div>
+        <p class="print-note"><strong>When printing sheets:</strong> choose 4×6 paper and “Fit” or “Full image.” Turn off cropping or “Fill.”</p>
       </section>
       <p class="error-message" id="error-message" role="alert" hidden></p>
     </main>
     <script>
       import { PhotoEditor } from '../lib/photo-editor';
-      import { downloadBlob, renderPassportSheet } from '../lib/sheet-renderer';
+      import { downloadBlob, renderSinglePhoto, renderSixPhotoSheet, renderTwoPhotoLandscapeSheet } from '../lib/sheet-renderer';
 
       const input = document.querySelector<HTMLInputElement>('#photo-input')!;
       const dropZone = document.querySelector<HTMLElement>('#drop-zone')!;
       const section = document.querySelector<HTMLElement>('#editor-section')!;
       const error = document.querySelector<HTMLElement>('#error-message')!;
-      const downloadButton = document.querySelector<HTMLButtonElement>('#download-button')!;
+      const generateButton = document.querySelector<HTMLButtonElement>('#generate-button')!;
+      const downloadSection = document.querySelector<HTMLElement>('#download-section')!;
       const editor = new PhotoEditor(
         document.querySelector<HTMLElement>('#crop-frame')!,
         document.querySelector<HTMLImageElement>('#editor-image')!,
@@ -128,21 +145,32 @@ import '../styles/global.css';
       });
       dropZone.addEventListener('drop', (event) => openPhoto(event.dataTransfer?.files[0]));
 
-      downloadButton.addEventListener('click', async () => {
-        downloadButton.disabled = true;
-        downloadButton.textContent = 'Creating JPEG…';
+      generateButton.addEventListener('click', () => {
+        downloadSection.hidden = false;
+        downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      const formats = {
+        single: { render: renderSinglePhoto, filename: 'passport-photo-600x600.jpg' },
+        six: { render: renderSixPhotoSheet, filename: 'passport-photos-4x6-portrait.jpg' },
+        two: { render: renderTwoPhotoLandscapeSheet, filename: 'passport-photos-4x6-landscape.jpg' },
+      } as const;
+
+      document.querySelectorAll<HTMLButtonElement>('[data-format]').forEach((button) => button.addEventListener('click', async () => {
+        const format = formats[button.dataset.format as keyof typeof formats];
+        if (!format) return;
+        button.disabled = true;
         error.hidden = true;
         try {
-          const blob = await renderPassportSheet(editor.getSnapshot());
-          downloadBlob(blob, 'passport-photos-4x6.jpg');
+          const blob = await format.render(editor.getSnapshot());
+          downloadBlob(blob, format.filename);
         } catch (cause) {
-          error.textContent = cause instanceof Error ? cause.message : 'The print sheet could not be created.';
+          error.textContent = cause instanceof Error ? cause.message : 'The image could not be created.';
           error.hidden = false;
         } finally {
-          downloadButton.disabled = false;
-          downloadButton.textContent = 'Download 4×6 JPEG';
+          button.disabled = false;
         }
-      });
+      }));
     </script>
   </body>
 </html>

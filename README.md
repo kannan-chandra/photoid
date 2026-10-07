@@ -1,6 +1,6 @@
 # Passport Photo Maker
 
-A frontend-only Astro app for positioning a photo and downloading a printable 4×6-inch JPEG containing six 2×2-inch passport photos. JPEG, PNG, WebP, HEIC, and HEIF photos are processed entirely in the browser.
+A frontend-only Astro app for positioning a photo and downloading passport images in three formats: a single 600×600 photo, a portrait 4×6 sheet with six photos, or a landscape 4×6 sheet with two photos and one-inch margins. JPEG, PNG, WebP, HEIC, and HEIF photos are processed entirely in the browser.
 
 ## Local development
 
@@ -16,7 +16,7 @@ npm run test:e2e
 npm run build
 ```
 
-The Playwright suite runs file selection, drag-and-drop, real HEIC conversion, editing, preview, and JPEG download flows in desktop and mobile Chromium. It verifies that the downloaded sheet is a 1200×1800 JPEG.
+The Playwright suite runs file selection, drag-and-drop, real HEIC conversion, editing, preview, and all three JPEG download flows in desktop and mobile Chromium. It verifies each downloaded image's filename and exact pixel dimensions.
 
 The HEIC integration-test fixture comes from the MIT-licensed [`heic2any`](https://github.com/alexcorvi/heic2any) project.
 

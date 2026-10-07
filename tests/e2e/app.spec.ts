@@ -77,24 +77,32 @@ test('converts and edits a HEIC photo entirely in the browser', async ({ page })
   expect(previewHasPixels).toBe(true);
 });
 
-test('downloads a 1200 by 1800 JPEG print sheet', async ({ page }) => {
+test('reveals step 3 and downloads every image format', async ({ page }) => {
   await page.goto('/');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="1200" height="900" fill="#247ba0"/><circle cx="600" cy="400" r="220" fill="#ffe0bd"/></svg>`;
   await page.locator('#photo-input').setInputFiles({ name: 'portrait.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) });
-  await expect(page.locator('#download-button')).toBeEnabled();
+  await expect(page.locator('#download-section')).toBeHidden();
+  await page.getByRole('button', { name: 'Generate images' }).click();
+  await expect(page.getByRole('heading', { name: 'Download your images' })).toBeVisible();
 
+  await expectDownload(page, 'Single photo', 'passport-photo-600x600.jpg', { width: 600, height: 600 });
+  await expectDownload(page, '4×6 portrait sheet', 'passport-photos-4x6-portrait.jpg', { width: 1200, height: 1800 });
+  await expectDownload(page, '4×6 landscape sheet', 'passport-photos-4x6-landscape.jpg', { width: 1800, height: 1200 });
+});
+
+async function expectDownload(page: import('@playwright/test').Page, buttonName: string, filename: string, dimensions: { width: number; height: number }) {
   const downloadPromise = page.waitForEvent('download');
-  await page.locator('#download-button').click();
+  await page.getByRole('button', { name: new RegExp(buttonName) }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe('passport-photos-4x6.jpg');
+  expect(download.suggestedFilename()).toBe(filename);
   const stream = await download.createReadStream();
   const chunks: Buffer[] = [];
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
   const jpeg = Buffer.concat(chunks);
   expect(jpeg.subarray(0, 2)).toEqual(Buffer.from([0xff, 0xd8]));
-  expect(readJpegDimensions(jpeg)).toEqual({ width: 1200, height: 1800 });
-  expect(jpeg.length).toBeGreaterThan(20_000);
-});
+  expect(readJpegDimensions(jpeg)).toEqual(dimensions);
+  expect(jpeg.length).toBeGreaterThan(10_000);
+}
 
 function readJpegDimensions(buffer: Buffer): { width: number; height: number } {
   let offset = 2;

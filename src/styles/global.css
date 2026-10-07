@@ -84,23 +84,31 @@ h2 { margin: .1rem 0 .25rem; font-size: 1.15rem; }
 .preview-panel canvas { display: block; width: min(100%, 12rem); height: auto; border: 1px solid #d7e0e7; border-radius: .4rem; }
 .preview-panel p { max-width: 18rem; margin: .65rem 0 0; color: #5c6873; font-size: .82rem; line-height: 1.4; }
 .error-message { padding: 1rem; border-radius: .65rem; background: #fff0ee; color: #9a2e22; font-weight: 700; }
-.export-panel {
-  display: grid; grid-template-columns: 3rem 1fr; gap: .85rem; align-items: center;
-  margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #d7e0e7;
-}
-.export-panel h3 { margin: 0 0 .2rem; font-size: 1rem; }
-.export-panel p { margin: 0; color: #5c6873; font-size: .85rem; line-height: 1.4; }
-.sheet-icon {
-  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr);
-  width: 2.5rem; height: 3.75rem; border: 1px solid #173f5f; background: white;
-}
-.sheet-icon i { border: .5px solid #9aaab7; background: #dce8ef; }
-.download-button {
-  grid-column: 1 / -1; min-height: 3.25rem; border: 0; border-radius: .65rem;
+.primary-button {
+  min-height: 3.25rem; border: 0; border-radius: .65rem;
   background: #173f5f; color: white; font-weight: 800; cursor: pointer;
 }
-.download-button:hover { background: #20577f; }
-.download-button:disabled { cursor: wait; opacity: .7; }
+.primary-button:hover { background: #20577f; }
+.generate-button { width: 100%; margin-top: 1.5rem; }
+.download-card { margin-top: 1rem; }
+.format-grid { display: grid; gap: .75rem; }
+.format-option {
+  display: grid; grid-template-columns: 5rem 1fr; align-items: center; gap: 1rem;
+  min-height: 6.5rem; padding: .85rem; border: 1px solid #cbd7df; border-radius: .75rem;
+  background: #f8fbfc; color: #17212b; text-align: left; cursor: pointer;
+}
+.format-option:hover { border-color: #173f5f; background: #eef6fa; }
+.format-option:focus-visible { outline: 3px solid #75b8e3; outline-offset: 2px; }
+.format-option:disabled { cursor: wait; opacity: .65; }
+.format-option strong, .format-option small { display: block; }
+.format-option strong { margin-bottom: .25rem; font-size: .95rem; }
+.format-option small { color: #5c6873; font-size: .78rem; line-height: 1.4; }
+.format-preview { display: grid; justify-self: center; overflow: hidden; border: 1px solid #738694; background: white; }
+.format-preview i { display: block; border: .5px solid #9aabb6; background: #d8e7ef; }
+.single-preview { width: 3.5rem; height: 3.5rem; }
+.portrait-preview { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); width: 2.8rem; height: 4.2rem; }
+.landscape-preview { grid-template-columns: repeat(2, 1fr); width: 4.5rem; height: 3rem; padding: .75rem; }
+.landscape-preview i { aspect-ratio: 1; }
 .print-note { margin: .9rem 0 0; color: #46535e; font-size: .82rem; line-height: 1.45; }
 [hidden] { display: none !important; }
 
@@ -108,7 +116,7 @@ h2 { margin: .1rem 0 .25rem; font-size: 1.15rem; }
   .app-shell { padding-top: 3.5rem; }
   .card { padding: 1.75rem; }
   .editor-layout { grid-template-columns: minmax(0, 1fr) 12rem; align-items: start; }
-  .export-panel { grid-template-columns: 3rem 1fr auto; }
-  .download-button { grid-column: auto; padding-inline: 1.25rem; }
   .drop-zone > p { display: block; }
+  .format-grid { grid-template-columns: repeat(3, 1fr); }
+  .format-option { grid-template-columns: 1fr; justify-items: center; text-align: center; }
 }
