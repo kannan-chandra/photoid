@@ -6,7 +6,7 @@ test('shows the private local-photo starting experience', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Passport photo maker' })).toBeVisible();
   await expect(page.getByText('Your photo stays on your device.')).toBeVisible();
   const input = page.locator('#photo-input');
-  await expect(input).toHaveAttribute('accept', 'image/*');
+  await expect(input).toHaveAttribute('accept', 'image/*,.heic,.heif');
   await expect(input).toHaveAttribute('capture', 'environment');
   await expect(page.getByText('Choose or take a photo')).toBeVisible();
 });
@@ -56,6 +56,25 @@ test('accepts a photo dropped onto the upload area', async ({ page }) => {
   await expect(page.locator('#editor-section')).toBeVisible();
   await expect(page.locator('#drop-zone')).not.toHaveClass(/is-dragging/);
   await expect(page.locator('#editor-image')).toHaveAttribute('src', /^blob:/);
+});
+
+test('converts and edits a HEIC photo entirely in the browser', async ({ page }) => {
+  test.setTimeout(30_000);
+  await page.goto('/');
+  await page.locator('#photo-input').setInputFiles('tests/fixtures/sample.heic');
+  await expect(page.locator('#editor-section')).toBeVisible();
+  await expect(page.locator('#editor-section')).not.toHaveAttribute('aria-busy', 'true', { timeout: 20_000 });
+  await expect(page.locator('#error-message')).toBeHidden();
+  const dimensions = await page.locator('#editor-image').evaluate((image: HTMLImageElement) => ({
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+  }));
+  expect(dimensions.width).toBeGreaterThan(0);
+  expect(dimensions.height).toBeGreaterThan(0);
+  const previewHasPixels = await page.locator('#crop-preview').evaluate((canvas: HTMLCanvasElement) =>
+    canvas.getContext('2d')!.getImageData(150, 150, 1, 1).data[3] > 0,
+  );
+  expect(previewHasPixels).toBe(true);
 });
 
 test('downloads a 1200 by 1800 JPEG print sheet', async ({ page }) => {

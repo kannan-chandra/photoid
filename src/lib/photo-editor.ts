@@ -1,3 +1,5 @@
+import { makeBrowserReadable } from './image-loader';
+
 export interface CropTransform {
   scale: number;
   offsetX: number;
@@ -37,7 +39,8 @@ export class PhotoEditor {
   }
 
   async load(file: File): Promise<void> {
-    const url = URL.createObjectURL(file);
+    const readableImage = await makeBrowserReadable(file);
+    const url = URL.createObjectURL(readableImage);
     await new Promise<void>((resolve, reject) => {
       this.image.onload = () => resolve();
       this.image.onerror = () => reject(new Error('That image could not be opened.'));

@@ -10,7 +10,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "astro": "^5.14.1"
+    "astro": "^5.14.1",
+    "heic2any": "^0.0.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
