@@ -2,5 +2,6 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://example.com',
+  site: process.env.SITE_URL ?? 'http://localhost:4321',
+  base: process.env.BASE_PATH ?? '/',
 });
