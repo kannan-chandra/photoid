@@ -6,6 +6,7 @@ export const PORTRAIT_SHEET_HEIGHT = 1800;
 export const LANDSCAPE_SHEET_WIDTH = 1800;
 export const LANDSCAPE_SHEET_HEIGHT = 1200;
 const ONE_INCH = 300;
+const HALF_INCH = 150;
 
 export async function renderSinglePhoto(crop: CropSnapshot): Promise<Blob> {
   const { canvas, context } = createCanvas(PHOTO_SIZE, PHOTO_SIZE);
@@ -26,9 +27,11 @@ export async function renderSixPhotoSheet(crop: CropSnapshot): Promise<Blob> {
 
 export async function renderTwoPhotoLandscapeSheet(crop: CropSnapshot): Promise<Blob> {
   const { canvas, context } = createCanvas(LANDSCAPE_SHEET_WIDTH, LANDSCAPE_SHEET_HEIGHT);
-  drawPhoto(context, crop, ONE_INCH, ONE_INCH);
-  drawPhoto(context, crop, ONE_INCH + PHOTO_SIZE, ONE_INCH);
-  drawPhotoBorders(context, [ONE_INCH, ONE_INCH + PHOTO_SIZE], ONE_INCH);
+  const firstPhotoX = HALF_INCH;
+  const secondPhotoX = HALF_INCH + PHOTO_SIZE + ONE_INCH;
+  drawPhoto(context, crop, firstPhotoX, ONE_INCH);
+  drawPhoto(context, crop, secondPhotoX, ONE_INCH);
+  drawPhotoBorders(context, [firstPhotoX, secondPhotoX], ONE_INCH);
   return encodeJpeg(canvas);
 }
 

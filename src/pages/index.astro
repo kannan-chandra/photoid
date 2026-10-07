@@ -80,16 +80,16 @@ import '../styles/global.css';
 
         <div class="format-grid">
           <button class="format-option" type="button" data-format="single">
-            <span class="format-preview single-preview" aria-hidden="true"><i></i></span>
+            <span class="format-preview single-preview"><img data-preview="single" alt="Generated single passport photo preview" /></span>
             <span><strong>Single photo</strong><small>600×600 · one 2×2 photo</small></span>
           </button>
           <button class="format-option" type="button" data-format="six">
-            <span class="format-preview portrait-preview" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="format-preview portrait-preview"><img data-preview="six" alt="Generated portrait six-photo sheet preview" /></span>
             <span><strong>4×6 portrait sheet</strong><small>1200×1800 · six photos</small></span>
           </button>
           <button class="format-option" type="button" data-format="two">
-            <span class="format-preview landscape-preview" aria-hidden="true"><i></i><i></i></span>
-            <span><strong>4×6 landscape sheet</strong><small>1800×1200 · two photos · 1-inch margins</small></span>
+            <span class="format-preview landscape-preview"><img data-preview="two" alt="Generated landscape two-photo sheet preview" /></span>
+            <span><strong>4×6 landscape sheet</strong><small>1800×1200 · two photos · wide center gap</small></span>
           </button>
         </div>
         <p class="print-note"><strong>When printing sheets:</strong> choose 4×6 paper and “Fit” or “Full image.” Turn off cropping or “Fill.”</p>
@@ -115,6 +115,8 @@ import '../styles/global.css';
 
       const openPhoto = async (file?: File) => {
         if (!file) return;
+        clearGeneratedImages();
+        downloadSection.hidden = true;
         error.hidden = true;
         section.hidden = false;
         section.setAttribute('aria-busy', 'true');
@@ -145,31 +147,51 @@ import '../styles/global.css';
       });
       dropZone.addEventListener('drop', (event) => openPhoto(event.dataTransfer?.files[0]));
 
-      generateButton.addEventListener('click', () => {
-        downloadSection.hidden = false;
-        downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-
       const formats = {
         single: { render: renderSinglePhoto, filename: 'passport-photo-600x600.jpg' },
         six: { render: renderSixPhotoSheet, filename: 'passport-photos-4x6-portrait.jpg' },
         two: { render: renderTwoPhotoLandscapeSheet, filename: 'passport-photos-4x6-landscape.jpg' },
       } as const;
+      const generatedImages = new Map<keyof typeof formats, { blob: Blob; url: string }>();
+
+      function clearGeneratedImages() {
+        generatedImages.forEach(({ url }) => URL.revokeObjectURL(url));
+        generatedImages.clear();
+        document.querySelectorAll<HTMLImageElement>('[data-preview]').forEach((image) => image.removeAttribute('src'));
+      }
+
+      generateButton.addEventListener('click', async () => {
+        generateButton.disabled = true;
+        generateButton.textContent = 'Generating images…';
+        error.hidden = true;
+        clearGeneratedImages();
+        try {
+          const crop = editor.getSnapshot();
+          const entries = await Promise.all(Object.entries(formats).map(async ([key, format]) => {
+            const blob = await format.render(crop);
+            return [key as keyof typeof formats, blob] as const;
+          }));
+          entries.forEach(([key, blob]) => {
+            const url = URL.createObjectURL(blob);
+            generatedImages.set(key, { blob, url });
+            document.querySelector<HTMLImageElement>(`[data-preview="${key}"]`)!.src = url;
+          });
+          downloadSection.hidden = false;
+          downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (cause) {
+          error.textContent = cause instanceof Error ? cause.message : 'The images could not be created.';
+          error.hidden = false;
+        } finally {
+          generateButton.disabled = false;
+          generateButton.textContent = 'Generate images';
+        }
+      });
 
       document.querySelectorAll<HTMLButtonElement>('[data-format]').forEach((button) => button.addEventListener('click', async () => {
         const format = formats[button.dataset.format as keyof typeof formats];
         if (!format) return;
-        button.disabled = true;
-        error.hidden = true;
-        try {
-          const blob = await format.render(editor.getSnapshot());
-          downloadBlob(blob, format.filename);
-        } catch (cause) {
-          error.textContent = cause instanceof Error ? cause.message : 'The image could not be created.';
-          error.hidden = false;
-        } finally {
-          button.disabled = false;
-        }
+        const generated = generatedImages.get(button.dataset.format as keyof typeof formats);
+        if (generated) downloadBlob(generated.blob, format.filename);
       }));
     </script>
   </body>

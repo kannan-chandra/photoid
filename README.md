@@ -1,6 +1,6 @@
 # Passport Photo Maker
 
-A frontend-only Astro app for positioning a photo and downloading passport images in three formats: a single 600×600 photo, a portrait 4×6 sheet with six photos, or a landscape 4×6 sheet with two photos and one-inch margins. JPEG, PNG, WebP, HEIC, and HEIF photos are processed entirely in the browser.
+A frontend-only Astro app for positioning a photo and downloading passport images in three formats: a single 600×600 photo, a portrait 4×6 sheet with six photos, or a landscape 4×6 sheet with two photos, 0.5-inch outer margins, and a 1-inch center gap. Generated files are previewed inline and cached for download. JPEG, PNG, WebP, HEIC, and HEIF photos are processed entirely in the browser.
 
 ## Local development
 

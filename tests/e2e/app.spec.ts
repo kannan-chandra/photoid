@@ -84,6 +84,31 @@ test('reveals step 3 and downloads every image format', async ({ page }) => {
   await expect(page.locator('#download-section')).toBeHidden();
   await page.getByRole('button', { name: 'Generate images' }).click();
   await expect(page.getByRole('heading', { name: 'Download your images' })).toBeVisible();
+  await expect(page.locator('[data-preview="single"]')).toHaveAttribute('src', /^blob:/);
+  await expect(page.locator('[data-preview="six"]')).toHaveAttribute('src', /^blob:/);
+  await expect(page.locator('[data-preview="two"]')).toHaveAttribute('src', /^blob:/);
+  await expect.poll(() => page.locator('[data-preview="two"]').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1800);
+
+  const landscapeSamples = await page.locator('[data-preview="two"]').evaluate((image: HTMLImageElement) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d')!;
+    context.drawImage(image, 0, 0);
+    const sample = (x: number, y: number) => Array.from(context.getImageData(x, y, 1, 1).data.slice(0, 3));
+    return {
+      leftMargin: sample(75, 600),
+      firstPhoto: sample(225, 600),
+      centerGap: sample(900, 600),
+      secondPhoto: sample(1125, 600),
+      rightMargin: sample(1725, 600),
+    };
+  });
+  expect(landscapeSamples.leftMargin.every((channel) => channel > 245)).toBe(true);
+  expect(landscapeSamples.centerGap.every((channel) => channel > 245)).toBe(true);
+  expect(landscapeSamples.rightMargin.every((channel) => channel > 245)).toBe(true);
+  expect(landscapeSamples.firstPhoto[2]).toBeGreaterThan(landscapeSamples.firstPhoto[0]);
+  expect(landscapeSamples.secondPhoto[2]).toBeGreaterThan(landscapeSamples.secondPhoto[0]);
 
   await expectDownload(page, 'Single photo', 'passport-photo-600x600.jpg', { width: 600, height: 600 });
   await expectDownload(page, '4×6 portrait sheet', 'passport-photos-4x6-portrait.jpg', { width: 1200, height: 1800 });
