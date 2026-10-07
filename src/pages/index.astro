@@ -27,8 +27,11 @@ import '../styles/global.css';
             <p>Your photo stays on your device.</p>
           </div>
         </div>
-        <label class="upload-button" for="photo-input">Choose or take a photo</label>
-        <input id="photo-input" type="file" accept="image/*" capture="environment" />
+        <div class="drop-zone" id="drop-zone">
+          <p><strong>Drop a photo here</strong><span>or</span></p>
+          <label class="upload-button" for="photo-input">Choose or take a photo</label>
+          <input id="photo-input" type="file" accept="image/*" capture="environment" />
+        </div>
         <p class="hint">Use a clear, recent photo with even lighting and a plain background.</p>
       </section>
 
@@ -82,6 +85,7 @@ import '../styles/global.css';
       import { downloadBlob, renderPassportSheet } from '../lib/sheet-renderer';
 
       const input = document.querySelector<HTMLInputElement>('#photo-input')!;
+      const dropZone = document.querySelector<HTMLElement>('#drop-zone')!;
       const section = document.querySelector<HTMLElement>('#editor-section')!;
       const error = document.querySelector<HTMLElement>('#error-message')!;
       const downloadButton = document.querySelector<HTMLButtonElement>('#download-button')!;
@@ -92,8 +96,7 @@ import '../styles/global.css';
         document.querySelector<HTMLCanvasElement>('#crop-preview')!,
       );
 
-      input.addEventListener('change', async () => {
-        const file = input.files?.[0];
+      const openPhoto = async (file?: File) => {
         if (!file) return;
         error.hidden = true;
         section.hidden = false;
@@ -105,7 +108,22 @@ import '../styles/global.css';
           error.textContent = cause instanceof Error ? cause.message : 'That image could not be opened.';
           error.hidden = false;
         }
+      };
+
+      input.addEventListener('change', () => openPhoto(input.files?.[0]));
+      ['dragenter', 'dragover'].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropZone.classList.add('is-dragging');
+        });
       });
+      ['dragleave', 'drop'].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropZone.classList.remove('is-dragging');
+        });
+      });
+      dropZone.addEventListener('drop', (event) => openPhoto(event.dataTransfer?.files[0]));
 
       downloadButton.addEventListener('click', async () => {
         downloadButton.disabled = true;

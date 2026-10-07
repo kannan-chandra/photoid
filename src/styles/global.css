@@ -47,6 +47,13 @@ h2 { margin: .1rem 0 .25rem; font-size: 1.15rem; }
 .step-heading p { font-weight: 650; color: #236f5b; }
 
 #photo-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.drop-zone {
+  padding: 1rem; border: 2px dashed #b9c9d4; border-radius: .8rem;
+  background: #f7fafc; transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.drop-zone.is-dragging { border-color: #173f5f; background: #e6f1f7; transform: scale(1.01); }
+.drop-zone > p { display: none; margin: 0 0 .75rem; text-align: center; color: #46535e; }
+.drop-zone > p span { margin-inline: .5rem; color: #77838d; font-weight: 400; }
 .upload-button {
   display: flex; align-items: center; justify-content: center;
   min-height: 3.25rem; padding: .75rem 1rem; cursor: pointer;
@@ -103,4 +110,5 @@ h2 { margin: .1rem 0 .25rem; font-size: 1.15rem; }
   .editor-layout { grid-template-columns: minmax(0, 1fr) 12rem; align-items: start; }
   .export-panel { grid-template-columns: 3rem 1fr auto; }
   .download-button { grid-column: auto; padding-inline: 1.25rem; }
+  .drop-zone > p { display: block; }
 }

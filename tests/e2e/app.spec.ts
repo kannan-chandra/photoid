@@ -42,6 +42,22 @@ test('loads, repositions, zooms, and previews a local photo', async ({ page }) =
   expect(previewHasPixels).toBe(true);
 });
 
+test('accepts a photo dropped onto the upload area', async ({ page }) => {
+  await page.goto('/');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100"><rect width="900" height="1100" fill="#3a7"/></svg>`;
+  const dataTransfer = await page.evaluateHandle((contents) => {
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([contents], 'dropped-photo.svg', { type: 'image/svg+xml' }));
+    return transfer;
+  }, svg);
+  await page.locator('#drop-zone').dispatchEvent('dragover', { dataTransfer });
+  await expect(page.locator('#drop-zone')).toHaveClass(/is-dragging/);
+  await page.locator('#drop-zone').dispatchEvent('drop', { dataTransfer });
+  await expect(page.locator('#editor-section')).toBeVisible();
+  await expect(page.locator('#drop-zone')).not.toHaveClass(/is-dragging/);
+  await expect(page.locator('#editor-image')).toHaveAttribute('src', /^blob:/);
+});
+
 test('downloads a 1200 by 1800 JPEG print sheet', async ({ page }) => {
   await page.goto('/');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="1200" height="900" fill="#247ba0"/><circle cx="600" cy="400" r="220" fill="#ffe0bd"/></svg>`;
