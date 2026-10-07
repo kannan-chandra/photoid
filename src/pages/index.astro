@@ -27,11 +27,11 @@ import '../styles/global.css';
             <p>Your photo stays on your device.</p>
           </div>
         </div>
-        <div class="drop-zone" id="drop-zone">
-          <p><strong>Drop a photo here</strong><span>or</span></p>
-          <label class="upload-button" for="photo-input">Choose or take a photo</label>
-          <input id="photo-input" type="file" accept="image/*,.heic,.heif" capture="environment" />
-        </div>
+        <label class="drop-zone" id="drop-zone" for="photo-input">
+          <span class="mobile-upload-copy">Choose or take a photo</span>
+          <span class="desktop-upload-copy">Choose photo <small>(or drop a photo here)</small></span>
+          <input id="photo-input" type="file" accept="image/*,.heic,.heif" />
+        </label>
         <p class="hint">Use a clear, recent photo with even lighting and a plain background.</p>
       </section>
 

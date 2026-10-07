@@ -1,14 +1,30 @@
 import { expect, test } from '@playwright/test';
 
-test('shows the private local-photo starting experience', async ({ page }) => {
+test('shows the private local-photo starting experience', async ({ page, isMobile }) => {
   await page.goto('/');
   await expect(page).toHaveTitle('Passport Photo Maker');
   await expect(page.getByRole('heading', { name: 'Passport photo maker' })).toBeVisible();
   await expect(page.getByText('Your photo stays on your device.')).toBeVisible();
   const input = page.locator('#photo-input');
   await expect(input).toHaveAttribute('accept', 'image/*,.heic,.heif');
-  await expect(input).toHaveAttribute('capture', 'environment');
-  await expect(page.getByText('Choose or take a photo')).toBeVisible();
+  await expect(input).not.toHaveAttribute('capture');
+  if (isMobile) {
+    await expect(page.locator('.mobile-upload-copy')).toHaveText('Choose or take a photo');
+    await expect(page.locator('.mobile-upload-copy')).toBeVisible();
+    await expect(page.locator('.desktop-upload-copy')).toBeHidden();
+  } else {
+    await expect(page.locator('.desktop-upload-copy')).toContainText('Choose photo (or drop a photo here)');
+    await expect(page.locator('.desktop-upload-copy')).toBeVisible();
+    await expect(page.locator('.mobile-upload-copy')).toBeHidden();
+  }
+});
+
+test('opens the native file chooser when the upload area is clicked', async ({ page }) => {
+  await page.goto('/');
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.locator('#drop-zone').click();
+  const chooser = await chooserPromise;
+  expect(chooser.isMultiple()).toBe(false);
 });
 
 test('loads, repositions, zooms, and previews a local photo', async ({ page }) => {
