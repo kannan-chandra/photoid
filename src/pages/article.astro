@@ -1,0 +1,51 @@
+---
+import PhotoCreator from '../components/PhotoCreator.astro';
+import '../styles/global.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const favicon = `${base}favicon.svg`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="A practical guide to taking and printing a passport photo at home." />
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+    <title>How to Take a Passport Photo at Home</title>
+  </head>
+  <body class="article-page">
+    <main class="article-shell">
+      <article>
+        <header class="article-header">
+          <a class="article-brand" href={base}>Passport Photo Maker</a>
+          <p class="article-kicker">Passport photo guide</p>
+          <h1>How to take a passport photo at home</h1>
+          <p class="article-deck">A plain background, balanced light, and a careful crop are enough to prepare a printable 2×2 photo without sending your image to a server.</p>
+        </header>
+
+        <div class="article-content">
+          <p>Stand about four feet from a white or off-white wall and face the camera directly. Keep both eyes open, use a neutral expression, and move hair away from your face. Ask someone else to take the photo when possible so the camera stays level.</p>
+
+          <h2>Use soft, even light</h2>
+          <p>Face a bright window or use two lamps placed to either side of the camera. Avoid overhead lighting and direct flash, which can create strong shadows on your face or the wall behind you.</p>
+
+          <aside class="article-tool" aria-labelledby="article-tool-heading">
+            <div class="article-tool-intro">
+              <p class="article-kicker">Free browser tool</p>
+              <h2 id="article-tool-heading">Create your 2×2 photo</h2>
+              <p>Upload, position, and download your image below. Your photo stays on your device.</p>
+            </div>
+            <PhotoCreator mode="embedded" />
+          </aside>
+
+          <h2>Check before you print</h2>
+          <p>Make sure your full head is visible, the image is sharp, and the background has no obvious shadows. When printing a 4×6 sheet, choose “Fit” or “Full image” and turn off automatic cropping.</p>
+
+          <p class="article-note"><strong>Remember:</strong> Acceptance is determined by the issuing authority. Review the current official photo requirements before submitting your application.</p>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>

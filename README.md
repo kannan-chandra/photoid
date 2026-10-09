@@ -2,6 +2,8 @@
 
 A frontend-only Astro app for positioning a photo and downloading passport images in three formats: a single 600×600 photo, a portrait 4×6 sheet with six photos, or a landscape 4×6 sheet with two photos, 0.5-inch outer margins, and a 1-inch center gap. Generated files are previewed inline and cached for download. JPEG, PNG, WebP, HEIC, and HEIF photos are processed entirely in the browser.
 
+The reusable `PhotoCreator.astro` component supports two presentation modes. The home page uses the full vertical flow, while `/article` demonstrates an embedded flow that advances through the same three steps in place.
+
 ## Local development
 
 ```sh
@@ -16,7 +18,7 @@ npm run test:e2e
 npm run build
 ```
 
-The Playwright suite runs file selection, drag-and-drop, real HEIC conversion, editing, preview, and all three JPEG download flows in desktop and mobile Chromium. It verifies each downloaded image's filename and exact pixel dimensions.
+The Playwright suite runs file selection, drag-and-drop, real HEIC conversion, editing, preview, all three JPEG download flows, and the embedded article flow in desktop and mobile Chromium. It verifies each downloaded image's filename and exact pixel dimensions.
 
 The HEIC integration-test fixture comes from the MIT-licensed [`heic2any`](https://github.com/alexcorvi/heic2any) project.
 

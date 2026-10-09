@@ -1,5 +1,9 @@
 ---
+import PhotoCreator from '../components/PhotoCreator.astro';
 import '../styles/global.css';
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const favicon = `${base}favicon.svg`;
 ---
 
 <!doctype html>
@@ -8,7 +12,7 @@ import '../styles/global.css';
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content="Create and print US passport photos privately in your browser." />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={favicon} />
     <title>Passport Photo Maker</title>
   </head>
   <body>
@@ -18,181 +22,7 @@ import '../styles/global.css';
         <h1>Passport photo maker</h1>
         <p class="intro">Upload a photo and generate compliant print-ready 2x2 images</p>
       </header>
-
-      <section class="card" aria-labelledby="choose-heading">
-        <div class="step-heading">
-          <span aria-hidden="true">1</span>
-          <div>
-            <h2 id="choose-heading">Choose your photo</h2>
-            <p>Your photo stays on your device.</p>
-          </div>
-        </div>
-        <label class="drop-zone" id="drop-zone" for="photo-input">
-          <span class="mobile-upload-copy">Choose or take a photo</span>
-          <span class="desktop-upload-copy">Choose photo <small>(or drop a photo here)</small></span>
-          <input id="photo-input" type="file" accept="image/*,.heic,.heif" />
-        </label>
-        <p class="hint">Use a clear, recent photo with even lighting and a plain background.</p>
-      </section>
-
-      <section class="card editor-card" id="editor-section" aria-labelledby="position-heading" hidden>
-        <div class="step-heading">
-          <span aria-hidden="true">2</span>
-          <div>
-            <h2 id="position-heading">Position your photo</h2>
-            <p>Drag to move. Use the slider to zoom.</p>
-          </div>
-        </div>
-
-        <div class="editor-layout">
-          <div>
-            <div class="crop-frame" id="crop-frame" aria-label="Photo positioning area">
-              <img id="editor-image" alt="Photo being positioned" draggable="false" />
-              <div class="passport-guide" aria-hidden="true">
-                <div class="head-oval"></div>
-                <div class="eye-line"><span>EYES</span></div>
-              </div>
-            </div>
-            <label class="zoom-control" for="zoom-input">
-              <span>Zoom</span>
-              <input id="zoom-input" type="range" min="1" max="3" step="0.01" value="1" />
-            </label>
-          </div>
-
-          <div class="preview-panel">
-            <h3>2×2 preview</h3>
-            <canvas id="crop-preview" width="300" height="300" aria-label="Passport photo crop preview"></canvas>
-            <p>The guide is for positioning only and won’t appear in your download.</p>
-          </div>
-        </div>
-
-        <button class="primary-button generate-button" id="generate-button" type="button">Generate images</button>
-      </section>
-
-      <section class="card download-card" id="download-section" aria-labelledby="download-heading" hidden>
-        <div class="step-heading">
-          <span aria-hidden="true">3</span>
-          <div>
-            <h2 id="download-heading">Download your images</h2>
-            <p>Choose the format you need.</p>
-          </div>
-        </div>
-
-        <div class="format-grid">
-          <button class="format-option" type="button" data-format="single">
-            <span class="format-preview single-preview"><img data-preview="single" alt="Generated single passport photo preview" /></span>
-            <span><strong>Single photo</strong><small>600×600</small></span>
-          </button>
-          <button class="format-option" type="button" data-format="six">
-            <span class="format-preview portrait-preview"><img data-preview="six" alt="Generated portrait six-photo sheet preview" /></span>
-            <span><strong>4×6 print</strong><small>1200×1800</small></span>
-          </button>
-          <button class="format-option" type="button" data-format="two">
-            <span class="format-preview landscape-preview"><img data-preview="two" alt="Generated landscape two-photo sheet preview" /></span>
-            <span><strong>4×6 print with margin</strong><small>1800×1200 · wide center gap</small></span>
-          </button>
-        </div>
-        <p class="print-note"><strong>When printing sheets:</strong> choose 4×6 paper and “Fit” or “Full image.” Turn off cropping or “Fill.”</p>
-      </section>
-      <p class="error-message" id="error-message" role="alert" hidden></p>
+      <PhotoCreator mode="full" />
     </main>
-    <script>
-      import { PhotoEditor } from '../lib/photo-editor';
-      import { downloadBlob, renderSinglePhoto, renderSixPhotoSheet, renderTwoPhotoLandscapeSheet } from '../lib/sheet-renderer';
-
-      const input = document.querySelector<HTMLInputElement>('#photo-input')!;
-      const dropZone = document.querySelector<HTMLElement>('#drop-zone')!;
-      const section = document.querySelector<HTMLElement>('#editor-section')!;
-      const error = document.querySelector<HTMLElement>('#error-message')!;
-      const generateButton = document.querySelector<HTMLButtonElement>('#generate-button')!;
-      const downloadSection = document.querySelector<HTMLElement>('#download-section')!;
-      const editor = new PhotoEditor(
-        document.querySelector<HTMLElement>('#crop-frame')!,
-        document.querySelector<HTMLImageElement>('#editor-image')!,
-        document.querySelector<HTMLInputElement>('#zoom-input')!,
-        document.querySelector<HTMLCanvasElement>('#crop-preview')!,
-      );
-
-      const openPhoto = async (file?: File) => {
-        if (!file) return;
-        clearGeneratedImages();
-        downloadSection.hidden = true;
-        error.hidden = true;
-        section.hidden = false;
-        section.setAttribute('aria-busy', 'true');
-        try {
-          await editor.load(file);
-          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } catch (cause) {
-          section.hidden = true;
-          error.textContent = cause instanceof Error ? cause.message : 'That image could not be opened.';
-          error.hidden = false;
-        } finally {
-          section.removeAttribute('aria-busy');
-        }
-      };
-
-      input.addEventListener('change', () => openPhoto(input.files?.[0]));
-      ['dragenter', 'dragover'].forEach((eventName) => {
-        dropZone.addEventListener(eventName, (event) => {
-          event.preventDefault();
-          dropZone.classList.add('is-dragging');
-        });
-      });
-      ['dragleave', 'drop'].forEach((eventName) => {
-        dropZone.addEventListener(eventName, (event) => {
-          event.preventDefault();
-          dropZone.classList.remove('is-dragging');
-        });
-      });
-      dropZone.addEventListener('drop', (event) => openPhoto(event.dataTransfer?.files[0]));
-
-      const formats = {
-        single: { render: renderSinglePhoto, filename: 'passport-photo-600x600.jpg' },
-        six: { render: renderSixPhotoSheet, filename: 'passport-photos-4x6-portrait.jpg' },
-        two: { render: renderTwoPhotoLandscapeSheet, filename: 'passport-photos-4x6-landscape.jpg' },
-      } as const;
-      const generatedImages = new Map<keyof typeof formats, { blob: Blob; url: string }>();
-
-      function clearGeneratedImages() {
-        generatedImages.forEach(({ url }) => URL.revokeObjectURL(url));
-        generatedImages.clear();
-        document.querySelectorAll<HTMLImageElement>('[data-preview]').forEach((image) => image.removeAttribute('src'));
-      }
-
-      generateButton.addEventListener('click', async () => {
-        generateButton.disabled = true;
-        generateButton.textContent = 'Generating images…';
-        error.hidden = true;
-        clearGeneratedImages();
-        try {
-          const crop = editor.getSnapshot();
-          const entries = await Promise.all(Object.entries(formats).map(async ([key, format]) => {
-            const blob = await format.render(crop);
-            return [key as keyof typeof formats, blob] as const;
-          }));
-          entries.forEach(([key, blob]) => {
-            const url = URL.createObjectURL(blob);
-            generatedImages.set(key, { blob, url });
-            document.querySelector<HTMLImageElement>(`[data-preview="${key}"]`)!.src = url;
-          });
-          downloadSection.hidden = false;
-          downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } catch (cause) {
-          error.textContent = cause instanceof Error ? cause.message : 'The images could not be created.';
-          error.hidden = false;
-        } finally {
-          generateButton.disabled = false;
-          generateButton.textContent = 'Generate images';
-        }
-      });
-
-      document.querySelectorAll<HTMLButtonElement>('[data-format]').forEach((button) => button.addEventListener('click', async () => {
-        const format = formats[button.dataset.format as keyof typeof formats];
-        if (!format) return;
-        const generated = generatedImages.get(button.dataset.format as keyof typeof formats);
-        if (generated) downloadBlob(generated.blob, format.filename);
-      }));
-    </script>
   </body>
 </html>

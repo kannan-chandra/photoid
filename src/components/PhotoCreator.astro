@@ -1,0 +1,209 @@
+---
+interface Props {
+  mode?: 'full' | 'embedded';
+}
+
+const { mode = 'full' } = Astro.props;
+const embedded = mode === 'embedded';
+---
+
+<div class:list={['photo-creator', `photo-creator--${mode}`]} data-mode={mode}>
+  <section class="card creator-step creator-step-one" aria-labelledby="choose-heading">
+    <div class="step-heading">
+      <span aria-hidden="true">1</span>
+      <div>
+        <h2 id="choose-heading">Choose your photo</h2>
+        <p>Your photo stays on your device.</p>
+      </div>
+    </div>
+    <label class="drop-zone" data-role="drop-zone">
+      <span class="mobile-upload-copy">Choose or take a photo</span>
+      <span class="desktop-upload-copy">Choose photo <small>(or drop a photo here)</small></span>
+      <input data-role="photo-input" type="file" accept="image/*,.heic,.heif" />
+    </label>
+    <p class="hint">Use a clear, recent photo with even lighting and a plain background.</p>
+  </section>
+
+  <section class="card creator-step creator-step-two editor-card" aria-labelledby="position-heading" hidden>
+    {embedded && <button class="back-button" type="button" data-back-to="1" aria-label="Back to choose photo">← Back</button>}
+    <div class="step-heading">
+      <span aria-hidden="true">2</span>
+      <div>
+        <h2 id="position-heading">Position your photo</h2>
+        <p>Drag to move. Use the slider to zoom.</p>
+      </div>
+    </div>
+
+    <div class="editor-layout">
+      <div>
+        <div class="crop-frame" data-role="crop-frame" aria-label="Photo positioning area">
+          <img data-role="editor-image" alt="Photo being positioned" draggable="false" />
+          <div class="passport-guide" aria-hidden="true">
+            <div class="head-oval"></div>
+            <div class="eye-line"><span>EYES</span></div>
+          </div>
+        </div>
+        <label class="zoom-control">
+          <span>Zoom</span>
+          <input data-role="zoom-input" type="range" min="1" max="3" step="0.01" value="1" />
+        </label>
+      </div>
+
+      <div class="preview-panel">
+        <h3>2×2 preview</h3>
+        <canvas data-role="crop-preview" width="300" height="300" aria-label="Passport photo crop preview"></canvas>
+        <p>The guide is for positioning only and won’t appear in your download.</p>
+      </div>
+    </div>
+
+    <button class="primary-button generate-button" data-role="generate-button" type="button">Generate images</button>
+  </section>
+
+  <section class="card creator-step creator-step-three download-card" aria-labelledby="download-heading" hidden>
+    {embedded && <button class="back-button" type="button" data-back-to="2" aria-label="Back to position photo">← Back</button>}
+    <div class="step-heading">
+      <span aria-hidden="true">3</span>
+      <div>
+        <h2 id="download-heading">Download your images</h2>
+        <p>Choose the format you need.</p>
+      </div>
+    </div>
+
+    <div class="format-grid">
+      <button class="format-option" type="button" data-format="single">
+        <span class="format-preview single-preview"><img data-preview="single" alt="Generated single passport photo preview" /></span>
+        <span><strong>Single photo</strong><small>600×600</small></span>
+      </button>
+      <button class="format-option" type="button" data-format="six">
+        <span class="format-preview portrait-preview"><img data-preview="six" alt="Generated portrait six-photo sheet preview" /></span>
+        <span><strong>4×6 print</strong><small>1200×1800</small></span>
+      </button>
+      <button class="format-option" type="button" data-format="two">
+        <span class="format-preview landscape-preview"><img data-preview="two" alt="Generated landscape two-photo sheet preview" /></span>
+        <span><strong>4×6 print with margin</strong><small>1800×1200 · wide center gap</small></span>
+      </button>
+    </div>
+    <p class="print-note"><strong>When printing sheets:</strong> choose 4×6 paper and “Fit” or “Full image.” Turn off cropping or “Fill.”</p>
+  </section>
+  <p class="error-message" data-role="error-message" role="alert" hidden></p>
+</div>
+
+<script>
+  import { PhotoEditor } from '../lib/photo-editor';
+  import { downloadBlob, renderSinglePhoto, renderSixPhotoSheet, renderTwoPhotoLandscapeSheet } from '../lib/sheet-renderer';
+
+  document.querySelectorAll<HTMLElement>('.photo-creator:not([data-initialized])').forEach((root) => {
+    root.dataset.initialized = 'true';
+    const embedded = root.dataset.mode === 'embedded';
+    const input = root.querySelector<HTMLInputElement>('[data-role="photo-input"]')!;
+    const dropZone = root.querySelector<HTMLElement>('[data-role="drop-zone"]')!;
+    const stepOne = root.querySelector<HTMLElement>('.creator-step-one')!;
+    const stepTwo = root.querySelector<HTMLElement>('.creator-step-two')!;
+    const stepThree = root.querySelector<HTMLElement>('.creator-step-three')!;
+    const error = root.querySelector<HTMLElement>('[data-role="error-message"]')!;
+    const generateButton = root.querySelector<HTMLButtonElement>('[data-role="generate-button"]')!;
+    const editor = new PhotoEditor(
+      root.querySelector<HTMLElement>('[data-role="crop-frame"]')!,
+      root.querySelector<HTMLImageElement>('[data-role="editor-image"]')!,
+      root.querySelector<HTMLInputElement>('[data-role="zoom-input"]')!,
+      root.querySelector<HTMLCanvasElement>('[data-role="crop-preview"]')!,
+    );
+
+    const formats = {
+      single: { render: renderSinglePhoto, filename: 'passport-photo-600x600.jpg' },
+      six: { render: renderSixPhotoSheet, filename: 'passport-photos-4x6-portrait.jpg' },
+      two: { render: renderTwoPhotoLandscapeSheet, filename: 'passport-photos-4x6-landscape.jpg' },
+    } as const;
+    const generatedImages = new Map<keyof typeof formats, { blob: Blob; url: string }>();
+
+    function showEmbeddedStep(step: 1 | 2 | 3) {
+      if (!embedded) return;
+      stepOne.hidden = step !== 1;
+      stepTwo.hidden = step !== 2;
+      stepThree.hidden = step !== 3;
+    }
+
+    function clearGeneratedImages() {
+      generatedImages.forEach(({ url }) => URL.revokeObjectURL(url));
+      generatedImages.clear();
+      root.querySelectorAll<HTMLImageElement>('[data-preview]').forEach((image) => image.removeAttribute('src'));
+    }
+
+    const openPhoto = async (file?: File) => {
+      if (!file) return;
+      clearGeneratedImages();
+      stepThree.hidden = true;
+      error.hidden = true;
+      stepTwo.hidden = false;
+      stepTwo.setAttribute('aria-busy', 'true');
+      if (embedded) showEmbeddedStep(2);
+      try {
+        await editor.load(file);
+        if (!embedded) stepTwo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (cause) {
+        stepTwo.hidden = true;
+        if (embedded) showEmbeddedStep(1);
+        error.textContent = cause instanceof Error ? cause.message : 'That image could not be opened.';
+        error.hidden = false;
+      } finally {
+        stepTwo.removeAttribute('aria-busy');
+      }
+    };
+
+    input.addEventListener('change', () => openPhoto(input.files?.[0]));
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropZone.classList.add('is-dragging');
+      });
+    });
+    ['dragleave', 'drop'].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('is-dragging');
+      });
+    });
+    dropZone.addEventListener('drop', (event) => openPhoto(event.dataTransfer?.files[0]));
+
+    generateButton.addEventListener('click', async () => {
+      generateButton.disabled = true;
+      generateButton.textContent = 'Generating images…';
+      error.hidden = true;
+      clearGeneratedImages();
+      try {
+        const crop = editor.getSnapshot();
+        const entries = await Promise.all(Object.entries(formats).map(async ([key, format]) => {
+          const blob = await format.render(crop);
+          return [key as keyof typeof formats, blob] as const;
+        }));
+        entries.forEach(([key, blob]) => {
+          const url = URL.createObjectURL(blob);
+          generatedImages.set(key, { blob, url });
+          root.querySelector<HTMLImageElement>(`[data-preview="${key}"]`)!.src = url;
+        });
+        stepThree.hidden = false;
+        if (embedded) showEmbeddedStep(3);
+        else stepThree.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (cause) {
+        error.textContent = cause instanceof Error ? cause.message : 'The images could not be created.';
+        error.hidden = false;
+      } finally {
+        generateButton.disabled = false;
+        generateButton.textContent = 'Generate images';
+      }
+    });
+
+    root.querySelectorAll<HTMLButtonElement>('[data-format]').forEach((button) => button.addEventListener('click', () => {
+      const key = button.dataset.format as keyof typeof formats;
+      const generated = generatedImages.get(key);
+      if (generated) downloadBlob(generated.blob, formats[key].filename);
+    }));
+
+    root.querySelectorAll<HTMLButtonElement>('[data-back-to]').forEach((button) => button.addEventListener('click', () => {
+      const target = Number(button.dataset.backTo) as 1 | 2;
+      error.hidden = true;
+      if (target === 1) input.value = '';
+      showEmbeddedStep(target);
+    }));
+  });
+</script>

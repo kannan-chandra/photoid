@@ -3,9 +3,10 @@ import { expect, test } from '@playwright/test';
 test('shows the private local-photo starting experience', async ({ page, isMobile }) => {
   await page.goto('/');
   await expect(page).toHaveTitle('Passport Photo Maker');
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', /favicon\.svg$/);
   await expect(page.getByRole('heading', { name: 'Passport photo maker' })).toBeVisible();
   await expect(page.getByText('Your photo stays on your device.')).toBeVisible();
-  const input = page.locator('#photo-input');
+  const input = page.locator('[data-role="photo-input"]');
   await expect(input).toHaveAttribute('accept', 'image/*,.heic,.heif');
   await expect(input).not.toHaveAttribute('capture');
   if (isMobile) {
@@ -22,7 +23,7 @@ test('shows the private local-photo starting experience', async ({ page, isMobil
 test('opens the native file chooser when the upload area is clicked', async ({ page }) => {
   await page.goto('/');
   const chooserPromise = page.waitForEvent('filechooser');
-  await page.locator('#drop-zone').click();
+  await page.locator('[data-role="drop-zone"]').click();
   const chooser = await chooserPromise;
   expect(chooser.isMultiple()).toBe(false);
 });
@@ -30,17 +31,18 @@ test('opens the native file chooser when the upload area is clicked', async ({ p
 test('loads, repositions, zooms, and previews a local photo', async ({ page }) => {
   await page.goto('/');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800"><rect width="1000" height="800" fill="#e33"/><circle cx="500" cy="340" r="180" fill="#fdc"/></svg>`;
-  await page.locator('#photo-input').setInputFiles({ name: 'portrait.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) });
+  await page.locator('[data-role="photo-input"]').setInputFiles({ name: 'portrait.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) });
 
-  const editorSection = page.locator('#editor-section');
+  const editorSection = page.locator('.creator-step-two');
   await expect(editorSection).toBeVisible();
+  await expect(page.locator('.creator-step-one')).toBeVisible();
   await expect(page.getByRole('heading', { name: '2×2 preview' })).toBeVisible();
 
-  const image = page.locator('#editor-image');
+  const image = page.locator('[data-role="editor-image"]');
   await expect(image).toHaveAttribute('src', /^blob:/);
   const initialTransform = await image.evaluate((element) => element.style.transform);
 
-  const frame = page.locator('#crop-frame');
+  const frame = page.locator('[data-role="crop-frame"]');
   const box = await frame.boundingBox();
   if (!box) throw new Error('Crop frame has no bounds');
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -49,9 +51,9 @@ test('loads, repositions, zooms, and previews a local photo', async ({ page }) =
   await page.mouse.up();
   await expect.poll(() => image.evaluate((element) => element.style.transform)).not.toBe(initialTransform);
 
-  await page.locator('#zoom-input').fill('1.6');
+  await page.locator('[data-role="zoom-input"]').fill('1.6');
   await expect.poll(() => image.evaluate((element) => element.style.width)).not.toBe('');
-  const previewHasPixels = await page.locator('#crop-preview').evaluate((canvas: HTMLCanvasElement) => {
+  const previewHasPixels = await page.locator('[data-role="crop-preview"]').evaluate((canvas: HTMLCanvasElement) => {
     const context = canvas.getContext('2d')!;
     return context.getImageData(150, 150, 1, 1).data[3] > 0;
   });
@@ -66,28 +68,28 @@ test('accepts a photo dropped onto the upload area', async ({ page }) => {
     transfer.items.add(new File([contents], 'dropped-photo.svg', { type: 'image/svg+xml' }));
     return transfer;
   }, svg);
-  await page.locator('#drop-zone').dispatchEvent('dragover', { dataTransfer });
-  await expect(page.locator('#drop-zone')).toHaveClass(/is-dragging/);
-  await page.locator('#drop-zone').dispatchEvent('drop', { dataTransfer });
-  await expect(page.locator('#editor-section')).toBeVisible();
-  await expect(page.locator('#drop-zone')).not.toHaveClass(/is-dragging/);
-  await expect(page.locator('#editor-image')).toHaveAttribute('src', /^blob:/);
+  await page.locator('[data-role="drop-zone"]').dispatchEvent('dragover', { dataTransfer });
+  await expect(page.locator('[data-role="drop-zone"]')).toHaveClass(/is-dragging/);
+  await page.locator('[data-role="drop-zone"]').dispatchEvent('drop', { dataTransfer });
+  await expect(page.locator('.creator-step-two')).toBeVisible();
+  await expect(page.locator('[data-role="drop-zone"]')).not.toHaveClass(/is-dragging/);
+  await expect(page.locator('[data-role="editor-image"]')).toHaveAttribute('src', /^blob:/);
 });
 
 test('converts and edits a HEIC photo entirely in the browser', async ({ page }) => {
   test.setTimeout(30_000);
   await page.goto('/');
-  await page.locator('#photo-input').setInputFiles('tests/fixtures/sample.heic');
-  await expect(page.locator('#editor-section')).toBeVisible();
-  await expect(page.locator('#editor-section')).not.toHaveAttribute('aria-busy', 'true', { timeout: 20_000 });
-  await expect(page.locator('#error-message')).toBeHidden();
-  const dimensions = await page.locator('#editor-image').evaluate((image: HTMLImageElement) => ({
+  await page.locator('[data-role="photo-input"]').setInputFiles('tests/fixtures/sample.heic');
+  await expect(page.locator('.creator-step-two')).toBeVisible();
+  await expect(page.locator('.creator-step-two')).not.toHaveAttribute('aria-busy', 'true', { timeout: 20_000 });
+  await expect(page.locator('[data-role="error-message"]')).toBeHidden();
+  const dimensions = await page.locator('[data-role="editor-image"]').evaluate((image: HTMLImageElement) => ({
     width: image.naturalWidth,
     height: image.naturalHeight,
   }));
   expect(dimensions.width).toBeGreaterThan(0);
   expect(dimensions.height).toBeGreaterThan(0);
-  const previewHasPixels = await page.locator('#crop-preview').evaluate((canvas: HTMLCanvasElement) =>
+  const previewHasPixels = await page.locator('[data-role="crop-preview"]').evaluate((canvas: HTMLCanvasElement) =>
     canvas.getContext('2d')!.getImageData(150, 150, 1, 1).data[3] > 0,
   );
   expect(previewHasPixels).toBe(true);
@@ -96,8 +98,8 @@ test('converts and edits a HEIC photo entirely in the browser', async ({ page })
 test('reveals step 3 and downloads every image format', async ({ page }) => {
   await page.goto('/');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="1200" height="900" fill="#247ba0"/><circle cx="600" cy="400" r="220" fill="#ffe0bd"/></svg>`;
-  await page.locator('#photo-input').setInputFiles({ name: 'portrait.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) });
-  await expect(page.locator('#download-section')).toBeHidden();
+  await page.locator('[data-role="photo-input"]').setInputFiles({ name: 'portrait.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg) });
+  await expect(page.locator('.creator-step-three')).toBeHidden();
   await page.getByRole('button', { name: 'Generate images' }).click();
   await expect(page.getByRole('heading', { name: 'Download your images' })).toBeVisible();
   await expect(page.locator('[data-preview="single"]')).toHaveAttribute('src', /^blob:/);
